@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 abel533@gmail.com
+ * Copyright (c) 2014-2017 abel533@gmail.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 
 package com.github.pagehelper.mapper;
 
-import com.github.pagehelper.PageInfo;
 import com.github.pagehelper.model.Country;
 import com.github.pagehelper.model.CountryExample;
 import com.github.pagehelper.model.CountryQueryModel;
@@ -37,6 +36,7 @@ import org.apache.ibatis.session.RowBounds;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("rawtypes")
 public interface CountryMapper {
 
     @Select("select * from country order by ${order}")
@@ -119,5 +119,9 @@ public interface CountryMapper {
 
     List<Country> selectByQueryModel(CountryQueryModel queryModel);
 
-    PageInfo<Country> selectPageInfo();
+    List<Country> selectByIdList(@Param("idList") List<Long> idList);
+
+    List<Country> selectByIdList2(@Param("idList") List<Long> idList);
+
+    List<Map<String, Object>> execute(@Param("sql") String sql);
 }

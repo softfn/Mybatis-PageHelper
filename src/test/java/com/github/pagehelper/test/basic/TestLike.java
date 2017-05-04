@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 abel533@gmail.com
+ * Copyright (c) 2014-2017 abel533@gmail.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,14 +53,14 @@ public class TestLike {
             List<Country> list = countryMapper.selectLike(country);
             assertEquals(30, list.get(0).getId());
             assertEquals(10, list.size());
-            assertEquals(39, ((Page) list).getTotal());
+            assertEquals(39, ((Page<?>) list).getTotal());
 
             //获取第1页，10条内容，默认查询总数count
             PageHelper.startPage(4, 10);
             list = countryMapper.selectLike(country);
             assertEquals(130, list.get(0).getId());
             assertEquals(9, list.size());
-            assertEquals(39, ((Page) list).getTotal());
+            assertEquals(39, ((Page<?>) list).getTotal());
         } finally {
             sqlSession.close();
         }

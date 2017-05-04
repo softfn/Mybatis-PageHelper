@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 abel533@gmail.com
+ * Copyright (c) 2014-2017 abel533@gmail.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,19 +64,7 @@ public class Page<E> extends ArrayList<E> {
     /**
      * 包含count查询
      */
-    private boolean count;
-    /**
-     * count信号，3种情况，null的时候执行默认BoundSql,true的时候执行count，false执行分页
-     */
-    private Boolean countSignal;
-    /**
-     * 排序
-     */
-    private String orderBy;
-    /**
-     * 只增加排序
-     */
-    private boolean orderByOnly;
+    private boolean count = true;
     /**
      * 分页合理化
      */
@@ -85,6 +73,11 @@ public class Page<E> extends ArrayList<E> {
      * 当设置为true的时候，如果pagesize设置为0（或RowBounds的limit=0），就不执行分页，返回全部结果
      */
     private Boolean pageSizeZero;
+
+    /**
+     * 进行count查询的列名
+     */
+    private String countColumn;
 
     public Page() {
         super();
@@ -113,8 +106,8 @@ public class Page<E> extends ArrayList<E> {
 
     /**
      * int[] rowBounds
-     *    0 : offset
-     *    1 : limit
+     * 0 : offset
+     * 1 : limit
      */
     public Page(int[] rowBounds, boolean count) {
         super(0);
@@ -138,41 +131,46 @@ public class Page<E> extends ArrayList<E> {
         return pages;
     }
 
-    public void setPages(int pages) {
+    public Page<E> setPages(int pages) {
         this.pages = pages;
+        return this;
     }
 
     public int getEndRow() {
         return endRow;
     }
 
-    public void setEndRow(int endRow) {
+    public Page<E> setEndRow(int endRow) {
         this.endRow = endRow;
+        return this;
     }
 
     public int getPageNum() {
         return pageNum;
     }
 
-    public void setPageNum(int pageNum) {
+    public Page<E> setPageNum(int pageNum) {
         //分页合理化，针对不合理的页码自动处理
         this.pageNum = ((reasonable != null && reasonable) && pageNum <= 0) ? 1 : pageNum;
+        return this;
     }
 
     public int getPageSize() {
         return pageSize;
     }
 
-    public void setPageSize(int pageSize) {
+    public Page<E> setPageSize(int pageSize) {
         this.pageSize = pageSize;
+        return this;
     }
 
     public int getStartRow() {
         return startRow;
     }
 
-    public void setStartRow(int startRow) {
+    public Page<E> setStartRow(int startRow) {
         this.startRow = startRow;
+        return this;
     }
 
     public long getTotal() {
@@ -201,9 +199,9 @@ public class Page<E> extends ArrayList<E> {
         return reasonable;
     }
 
-    public void setReasonable(Boolean reasonable) {
+    public Page<E> setReasonable(Boolean reasonable) {
         if (reasonable == null) {
-            return;
+            return this;
         }
         this.reasonable = reasonable;
         //分页合理化，针对不合理的页码自动处理
@@ -211,16 +209,18 @@ public class Page<E> extends ArrayList<E> {
             this.pageNum = 1;
             calculateStartAndEndRow();
         }
+        return this;
     }
 
     public Boolean getPageSizeZero() {
         return pageSizeZero;
     }
 
-    public void setPageSizeZero(Boolean pageSizeZero) {
+    public Page<E> setPageSizeZero(Boolean pageSizeZero) {
         if (pageSizeZero != null) {
             this.pageSizeZero = pageSizeZero;
         }
+        return this;
     }
 
     /**
@@ -235,35 +235,10 @@ public class Page<E> extends ArrayList<E> {
         return this.count;
     }
 
-    public void setCount(boolean count) {
+    public Page<E> setCount(boolean count) {
         this.count = count;
+        return this;
     }
-
-    public String getOrderBy() {
-        return orderBy;
-    }
-
-    public void setOrderBy(String orderBy) {
-        this.orderBy = orderBy;
-    }
-
-    public boolean isOrderByOnly() {
-        return orderByOnly;
-    }
-
-    public void setOrderByOnly(boolean orderByOnly) {
-        this.orderByOnly = orderByOnly;
-    }
-
-    public Boolean getCountSignal() {
-        return countSignal;
-    }
-
-    public void setCountSignal(Boolean countSignal) {
-        this.countSignal = countSignal;
-    }
-
-    //增加链式调用方法
 
     /**
      * 设置页码
@@ -322,6 +297,53 @@ public class Page<E> extends ArrayList<E> {
         return this;
     }
 
+    /**
+     * 指定 count 查询列
+     *
+     * @param columnName
+     * @return
+     */
+    public Page<E> countColumn(String columnName) {
+        this.countColumn = columnName;
+        return this;
+    }
+
+
+    /**
+     * 转换为PageInfo
+     *
+     * @return
+     */
+    public PageInfo<E> toPageInfo() {
+        PageInfo<E> pageInfo = new PageInfo<E>(this);
+        return pageInfo;
+    }
+
+    public <E> Page<E> doSelectPage(ISelect select) {
+        select.doSelect();
+        return (Page<E>) this;
+    }
+
+    public <E> PageInfo<E> doSelectPageInfo(ISelect select) {
+        select.doSelect();
+        return (PageInfo<E>) this.toPageInfo();
+    }
+
+    public long doCount(ISelect select) {
+        this.pageSizeZero = true;
+        this.pageSize = 0;
+        select.doSelect();
+        return this.total;
+    }
+
+    public String getCountColumn() {
+        return countColumn;
+    }
+
+    public void setCountColumn(String countColumn) {
+        this.countColumn = countColumn;
+    }
+
     @Override
     public String toString() {
         return "Page{" +
@@ -332,9 +354,6 @@ public class Page<E> extends ArrayList<E> {
                 ", endRow=" + endRow +
                 ", total=" + total +
                 ", pages=" + pages +
-                ", countSignal=" + countSignal +
-                ", orderBy='" + orderBy + '\'' +
-                ", orderByOnly=" + orderByOnly +
                 ", reasonable=" + reasonable +
                 ", pageSizeZero=" + pageSizeZero +
                 '}';
